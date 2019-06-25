@@ -26,6 +26,117 @@
     </div>
     <script src="../../common/js/jquery.js"></script>
     <script>
+    $(function() {
+        var pageNum = 0; // pageNumという変数に0と宣言
+        var prevword = ''; // prevwordという変数に空の文字列を定義
+        $('.search__btn').on('click',function() { //クリックした時の処理
+          test()
+          $('.message').empty(); //messageを削除
+        });
+        function test() {
+          pageNum = pageNum + 1; //変数pageNumに1ずつ加算
+          var keyword = $('#js-search-word').val(); // keywordという変数に#js-search-wordを定義。#js-search-wordのval属性を取得
+          if(prevword !== keyword) { // prevwordがkeywordと異なるとき
+            pageNum = 1; // pageNumを1にする
+            $('ul').empty(); // ulの中身を空にする
+            prevword = keyword; // keywordにprevwordを保存
+          }
+          return $.ajax({ // データの取得
+            url: 'https://app.rakuten.co.jp/services/api/BooksTotal/Search/20130522',
+            type: 'GET',
+            datatype: 'json',
+            data: {
+              applicationId: '1019399324990976605',
+              booksGenreId: '001',
+              keyword: prevword,
+              page: pageNum,
+              cache: false,
+              hits: 20
+            }
+          }).done(function(data) { // データ通信に成功した場合
+            if(data.count > 0) { // data.countが0よりも大きいとき
+              var b = data.Items;
+              var list = "";
+              $.each(b,function(index,val) { // data.Itemsに対して次の関数を繰り返し実行
+                list += '<li class="lists__item"><div class="lists__item__inner"><a href="'+ val.Item.itemUrl +'" class="lists__item__link" target="_blank"><img src="'+ val.Item.largeImageUrl +'" class="lists__item__img" alt=""><p class="lists__item__detail">作品名：　'+ val.Item.title +'</p><p class="lists__item__detail">作者　：　'+ val.Item.author +'</p><p class="lists__item__detail">出版社：　'+ val.Item.publisherName +'</p></a></div></li>'
+              })
+              $('.lists').prepend(list);
+            } else if(data.count === 0) { // data.countが0件だったとき
+              zerolist();
+            }
+            function zerolist() { // 検索結果が0件だったとき
+              $('.lists').prepend('<p class = "message">検索結果が見つかりませんでした。<br>別のキーワードで検索して下さい。</p>'); // listsの前に表示
+            };
+          }).fail(function(error) { // 取得に失敗した場合
+            err(error);
+          })
+          function err(error) {
+            var c = error.status
+            if(c === 0){ // エラーステータスコードがのとき
+              $('.lists').prepend('<p class = "message">ネットワークの接続が確認出来ません。<br>もう一度通信環境をお確かめ下さい。</p>');
+            }else if(c === 400){ // エラーステータスコードが400のとき
+              $('.lists').prepend('<p class = "message">検索キーワードは2文字以上で入力して下さい。</p>');
+            }else if(c === 429){ // エラーステータスコードが429のとき
+              $('.lists').prepend('<p class = "message">検索ボタンは連打出来ません。<br>もう一度検索して下さい。</p>');
+            }
+          }
+        };
+      });
+
+
+
+
+
+
+
+
+    // $(function() {
+    //   $('.search__btn').on('click',function() {
+    //     test()
+    //   })
+    //   function test() {
+    //     var keyword = $('#js-search-word').val();
+    //     $.ajax({
+    //       url: 'https://app.rakuten.co.jp/services/api/BooksTotal/Search/20130522',
+    //       type: 'GET',
+    //       datatype: 'json',
+    //       data: {
+    //         applicationId: '1019399324990976605',
+    //         booksGenreId: '001',
+    //         keyword: keyword,
+    //         hits: 20
+    //       }
+    //     }).done(function(data) {
+    //       if(data.count > 0) {
+    //         var b = data.Items;
+    //         var template = "";
+    //         $.each(b,function(index,val) {
+    //           template += '<li class="lists__item"><div class="lists__item__inner"><a href="'+ val.Item.itemUrl +'" class="lists__item__link" target="_blank"><img src="'+ val.Item.largeImageUrl +'" class="lists__item__img" alt=""><p class="lists__item__detail">作品名：'+ val.Item.title +'</p><p class="lists__item__detail">作者　：'+ val.Item.author +'</p><p class="lists__item__detail">出版社：'+ val.Item.publisherName +'</p></a></div></li>';
+    //           $('.lists').html(template);
+    //         })
+    //       }else if(data.count === 0){
+    //         $('.lists').before('<div class="coment"></div>')
+    //         $('.lists').html('<p class="message">検索結果が見つかりませんでした。<br>別のキーワードで検索して下さい。</p>');
+    //       }
+    //     }).fail(function(data) {
+    //       $('ul').empty();
+    //       error()
+    //     })
+    //     function error() {
+          // var c = (keyword.match(/^[a-zA-Z0-9]+$/)).length;
+    //       if(c===1) {
+    //         $('.lists').html('<p class="message">検索結果が見つかりませんでした。<br>半角英数字は2文字以上で検索してください。</p>');
+    //       }
+    //     }
+    //   }
+    // })
+
+
+
+
+
+
+
       // 楽天ブックスの総合検索APIを使って製作してください。
       // answerの挙動を良く見てね！
       //
@@ -63,6 +174,20 @@
       // }).done(function(data) {
       //   // この中にデータ取得後の動きを記述していきます。
       // });
+      // GET:指定されたURLのリソースをとり出す。
+      // POST:GETとは逆にクライアントがサーバーにデータを送信する。WEBフォームや電子掲示板への投稿などで利用される。GETと同じくサーバーはクライアントにデータを返すことができる。
+      // API：プログラムからソフトウェアを操作するためのインターフェイス。プログラムとソフトウェアをつなぐもの。
+
+      // 文章＝検索結果が見つかりませんでした。別のキーワードで検索してください。
+      // GizTechのエラー＝それぞれのエラー理由、改善方法
+
+      // $('.search__btn').on('click',function() {
+      // test();
+      // });
+      // function test() {
+      //処理する
+      // }
+      // .done(ここも).fail(ここも)
       //
     </script>
   </body>
